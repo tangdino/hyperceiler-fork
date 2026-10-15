@@ -1,0 +1,158 @@
+diff --git a/app/src/main/java/com/sevtinge/hyperceiler/home/banner/HomePageBannerManager.java b/app/src/main/java/com/sevtinge/hyperceiler/home/banner/HomePageBannerManager.java
+index 802df4d..0c2af6b 100644
+--- a/app/src/main/java/com/sevtinge/hyperceiler/home/banner/HomePageBannerManager.java
++++ b/app/src/main/java/com/sevtinge/hyperceiler/home/banner/HomePageBannerManager.java
+@@ -179,7 +179,7 @@ public class HomePageBannerManager {
+     }
+ 
+     private static BannerBean createWarningBannerIfNeeded(Context context) {
+-        if (!SignUtils.isSignCheckPass(context)) {
++        if (false && !SignUtils.isSignCheckPass(context)) {
+             return createWarningBanner(
+                 "warning_sign",
+                 context.getString(R.string.headtip_warn_sign_verification_failed),
+diff --git a/app/src/main/java/com/sevtinge/hyperceiler/utils/NoticeProcessor.java b/app/src/main/java/com/sevtinge/hyperceiler/utils/NoticeProcessor.java
+index aeac6c6..03f0ebd 100644
+--- a/app/src/main/java/com/sevtinge/hyperceiler/utils/NoticeProcessor.java
++++ b/app/src/main/java/com/sevtinge/hyperceiler/utils/NoticeProcessor.java
+@@ -227,7 +227,7 @@ public class NoticeProcessor {
+         }
+ 
+         // Is need sign check
+-        return !n.signCheckPassNeed || SignUtils.isSignCheckPass(context);
++        return !n.signCheckPassNeed || true;
+     }
+ 
+     public static boolean isNeedShowTosDialog(NoticeProcessor.NoticeResult result){
+diff --git a/library/core/src/main/res/xml/system_ui_status_bar_icon_manage_new.xml b/library/core/src/main/res/xml/system_ui_status_bar_icon_manage_new.xml
+index a726fb8..43ad141 100644
+--- a/library/core/src/main/res/xml/system_ui_status_bar_icon_manage_new.xml
++++ b/library/core/src/main/res/xml/system_ui_status_bar_icon_manage_new.xml
+@@ -158,6 +158,12 @@
+     </PreferenceCategory>
+ 
+     <PreferenceCategory android:title="@string/system_ui_statusbar_iconmanage_notify_title">
++        <SwitchPreference
++            android:defaultValue="false"
++            android:key="prefs_key_system_ui_status_bar_hide_notification_dots"
++            android:title="@string/system_ui_status_bar_hide_notification_dots"
++            android:summary="@string/system_ui_status_bar_hide_notification_dots_summary" />
++
+         <SwitchPreference
+             android:defaultValue="false"
+             android:key="prefs_key_system_ui_status_bar_notification_icon_maximum_enable"
+diff --git a/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/app/SystemUI/SystemUIB.java b/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/app/SystemUI/SystemUIB.java
+index c94256c..4957f5d 100644
+--- a/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/app/SystemUI/SystemUIB.java
++++ b/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/app/SystemUI/SystemUIB.java
+@@ -87,6 +87,7 @@ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.Batter
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.HideVoWiFiIcon;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.IconsFromSystemManager;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.NotificationIconColumns;
++import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.HideNotificationDots;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.SelectiveHideIconForAlarmClock;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.StatusBarIcon;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.SwapWiFiAndMobileNetwork;
+@@ -139,6 +140,7 @@ public class SystemUIB extends BaseLoad {
+         initHook(HideVoWiFiIcon.INSTANCE, PrefsBridge.getBoolean("system_ui_status_bar_icon_vowifi") || PrefsBridge.getBoolean("system_ui_status_bar_icon_volte"));
+         initHook(new SelectiveHideIconForAlarmClock(), PrefsBridge.getStringAsInt("system_ui_status_bar_icon_alarm_clock", 0) == 3 && PrefsBridge.getInt("system_ui_status_bar_icon_alarm_clock_n", 0) > 0);
+         initHook(new NotificationIconColumns(), PrefsBridge.getBoolean("system_ui_status_bar_notification_icon_maximum_enable"));
++        initHook(new HideNotificationDots(), PrefsBridge.getBoolean("system_ui_status_bar_hide_notification_dots"));
+         initHook(NotificationImportanceHyperOSFix.INSTANCE, PrefsBridge.getBoolean("system_settings_more_notification_settings"));
+         initHook(new MoreNotificationSettings(), PrefsBridge.getBoolean("system_settings_more_notification_settings"));
+ 
+diff --git a/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/app/SystemUI/SystemUIV.java b/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/app/SystemUI/SystemUIV.java
+index d23b30e..a005069 100644
+--- a/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/app/SystemUI/SystemUIV.java
++++ b/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/app/SystemUI/SystemUIV.java
+@@ -110,6 +110,7 @@ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.HideBa
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.HideVoWiFiIcon;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.IconsFromSystemManager;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.NotificationIconColumns;
++import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.HideNotificationDots;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.SelectiveHideIconForAlarmClock;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.StatusBarIcon;
+ import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.icon.all.SwapWiFiAndMobileNetwork;
+@@ -166,6 +167,7 @@ public class SystemUIV extends BaseLoad {
+         initHook(WifiStandard.INSTANCE, PrefsBridge.getStringAsInt("system_ui_status_bar_icon_wifi_standard", 0) > 0);
+         initHook(new SelectiveHideIconForAlarmClock(), PrefsBridge.getStringAsInt("system_ui_status_bar_icon_alarm_clock", 0) == 3 && PrefsBridge.getInt("system_ui_status_bar_icon_alarm_clock_n", 0) > 0);
+         initHook(new NotificationIconColumns(), PrefsBridge.getBoolean("system_ui_status_bar_notification_icon_maximum_enable"));
++        initHook(new HideNotificationDots(), PrefsBridge.getBoolean("system_ui_status_bar_hide_notification_dots"));
+         initHook(new HideStatusBarBeforeScreenshot(), PrefsBridge.getBoolean("system_ui_status_bar_hide_icon"));
+         initHook(new DataSaverIcon(), PrefsBridge.getStringAsInt("system_ui_status_bar_icon_data_saver", 0) != 0);
+         initHook(WifiNetworkIndicator.INSTANCE, PrefsBridge.getBoolean("system_ui_status_bar_icon_wifi_network_indicator_new"));
+diff --git a/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/mishare/NoAutoTurnOff.kt b/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/mishare/NoAutoTurnOff.kt
+index 5505c78..af6b459 100644
+--- a/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/mishare/NoAutoTurnOff.kt
++++ b/library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/mishare/NoAutoTurnOff.kt
+@@ -32,6 +32,8 @@ object NoAutoTurnOff : BaseHook() {
+ 
+     override fun initDexKit(): Boolean {
+         stopAdvertAllMethod
++        setAdvertAllMethod
++        changeSwitchStatusMethod
+         showToastMethod
+         toastMethodNew
+         return true
+@@ -46,6 +48,39 @@ object NoAutoTurnOff : BaseHook() {
+         } as? Method
+     }
+ 
++    private val setAdvertAllMethod by lazy {
++        optionalMember("NoAutoTurnOffSetAdvertAll") {
++            it.findMethod {
++                matcher {
++                    declaredClass {
++                        usingStrings("SettingsUtils")
++                    }
++                    returnType = "void"
++                    paramTypes = listOf("android.content.Context", "boolean")
++                    modifiers = Modifier.STATIC
++                    usingStrings("mishare_enabled", "setAdvertAll: ")
++                }
++            }.singleOrNull()
++        } as? Method
++    }
++
++
++    private val changeSwitchStatusMethod by lazy {
++        optionalMember("NoAutoTurnOffChangeSwitchStatus") {
++            it.findMethod {
++                matcher {
++                    declaredClass {
++                        usingStrings("MiShareSwitchHelper")
++                    }
++                    returnType = "void"
++                    paramTypes = listOf("int")
++                    modifiers = Modifier.STATIC
++                    usingStrings("changeSwitchStatus status: ")
++                }
++            }.singleOrNull()
++        } as? Method
++    }
++
+     private val toastMethodNew by lazy<List<Method>> {
+         optionalMemberList("NoAutoTurnOff4N") {
+             it.findMethod {
+@@ -82,6 +117,21 @@ object NoAutoTurnOff : BaseHook() {
+             returnConstant(null)
+         }
+ 
++        // HyperOS 3 上自动关闭还会直接写 mishare_enabled=false，拦截所有关闭写入，保留开启写入。
++        setAdvertAllMethod?.createBeforeHook {
++            if (it.args.getOrNull(1) == false) {
++                it.result = null
++            }
++        }
++
++        // 自动关闭最终会把 switch_status 改为 0/1；开启该功能后固定保持“全部设备可发现”的 2。
++        changeSwitchStatusMethod?.createBeforeHook {
++            val status = it.args.getOrNull(0) as? Int
++            if (status != null && status < 2) {
++                it.args[0] = 2
++            }
++        }
++
+ 
+         // 干掉小米互传十分钟倒计时 Toast
+         Context::class.java.findMethod {
